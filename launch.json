@@ -1,0 +1,30 @@
+{
+  "kind": "univ4_hook",
+  "hook": {
+    "contract": "TestHook",
+    "constructorArgs": [
+      "$poolManager",
+      "$token"
+    ],
+    "permissions": [
+      "beforeInitialize",
+      "beforeSwap",
+      "afterSwap",
+      "beforeSwapReturnDelta",
+      "afterSwapReturnDelta"
+    ]
+  },
+  "token": {
+    "contract": "TestToken",
+    "name": "SIMD TEST 3 - DO NOT BUY",
+    "symbol": "SIMDTEST3",
+    "decimals": 18
+  },
+  "pool": {
+    "pairedCurrency": "0x5f7bb59365ce557c26dbcaa4ee9d39a4b95b7127",
+    "fee": 12500,
+    "tickSpacing": 60,
+    "initialPrice": "79228162514264337593543950336"
+  },
+  "notes": "TEST TOKEN, NOT A REAL COIN: SIMDTEST3 has no value and must not be bought. It rehearses the SIMD relaunch on Robinhood Chain (chain id 4663). Logo: https://www.si-md.xyz/logo.jpg. TestToken (src/TestToken.sol) is a plain OpenZeppelin ERC-20 with no constructor arguments; it mints the whole supply once to the deploying factory, which performs the policy allocations. TestHook (src/TestHook.sol) is the Uniswap v4 hook on the SIMDTEST3/IMD pool. Constructor (IPoolManager manager_, address token_) = ($poolManager, $token); it makes no external calls and rejects a zero manager, a zero token, IMD as the token, and an address whose low 14 bits do not equal 0x20cc. On every buy and every sell it takes 0.75% (FEE_BPS = 75 of 10000) of the IMD side of the swap and sends it, in IMD, to the SIMD Test Vault at 0x8fe1805a83bcf70f514bc716cd88c05051d6ff21, a constant in the bytecode. It never sells the fee for ETH. Together with the pool's 1.25% LP fee (pool.fee 12500, a constant LP_FEE the hook checks) a trade costs a nominal 2%. The rate is fixed at deploy: there is no owner, admin, setter, upgrade path, pause, blacklist, anti-sniper tax, or time or block logic, and nothing can redirect the fee. Permissions returned by getHookPermissions: beforeInitialize, beforeSwap, afterSwap, beforeSwapReturnDelta, afterSwapReturnDelta. beforeInitialize accepts only calls from the PoolManager and only the pool of this exact token and IMD with this hook, fee 12500 and tick spacing 60; it imposes no sender or price restriction, so the factory may initialize at the opening price it derives from the policy's 2,500 IMD market cap (pool.initialPrice is written as the launch facts give it and is not used by the deployer). beforeSwap reserves the fee on the IMD side when IMD is the specified currency (via a self-only reverted simulation to size the executed amount) and afterSwap settles it; the launch token is never charged. The fee is paid with poolManager.take to the vault; if the manager cannot pay it yet, the same amount is minted to the hook as an ERC-6909 IMD claim (FeeDeferred) and anyone may call redeemFees(amount) to move it to the vault, with no recipient argument. The hook never reverts a valid, funded swap. No liquidity callbacks are enabled, so the factory's zero-change fee collection passes. Fork tests under test/fork run against Robinhood Chain when a fork URL is configured and skip otherwise. There is no $owner, $factory or $launchNumber argument because the hook has no owner and does not check who initializes its pool."
+}
